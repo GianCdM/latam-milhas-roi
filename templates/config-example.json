@@ -1,0 +1,52 @@
+{
+  "saldo": 0,
+  "cartao_principal": {
+    "id": "inf",
+    "nome": "LATAM Pass Itaú Visa Infinite",
+    "taxa_nac": 2.5,
+    "taxa_int": 3.5,
+    "anuidade_mensal": 100,
+    "isencao_100_pct": 20000,
+    "isencao_50_pct": 10000,
+    "tipo": "direct",
+    "programa": "LATAM Pass"
+  },
+  "cartoes_secundarios": [
+    {
+      "id": "c6c",
+      "nome": "C6 Carbon",
+      "taxa_nac": 2.5,
+      "anuidade_mensal": 0,
+      "tipo": "transfer",
+      "programa": "Átomos→LATAM"
+    }
+  ],
+  "clube": {
+    "id": "bte",
+    "nome": "Base+Turbo+Embarque",
+    "preco_mensal": 406.70,
+    "milhas_fixas": 11500,
+    "pq_mensal": 750,
+    "bonus_transferencia": 0.35
+  },
+  "categoria_elite": "Platinum",
+  "campanha_ativa": {
+    "pct": 50,
+    "ate": "30/04/2026",
+    "descricao": "Clube+Itaú: +50% bônus acúmulo",
+    "recorrente": true
+  },
+  "mkt_ref": 0.025,
+  "mkt_fonte": "Balcão de Milhas",
+  "cambio_ptax": {
+    "2025-07": 5.47,
+    "2025-08": 5.51,
+    "2025-09": 5.44,
+    "2025-10": 5.70,
+    "2025-11": 5.81,
+    "2025-12": 6.07,
+    "2026-01": 6.02,
+    "2026-02": 5.78,
+    "2026-03": 5.72
+  }
+}
