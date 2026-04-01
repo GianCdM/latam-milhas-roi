@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LATAM Pass — Milhas & ROI (Demo)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0b0f1a; }
+    #root { min-height: 100vh; }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+  <script crossorigin src="https://unpkg.com/recharts@2.15.4/umd/Recharts.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useMemo } = React;
+const { AreaChart, Area, BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, ReferenceArea, ReferenceLine } = Recharts;
+
+// ===== DADOS FICTÍCIOS (DEMO) =====
+const TX = [
+  {d:"2025-07",s:"LATAM Airlines",t:"A",m:1200},
+  {d:"2025-08",s:"C6 Bank Atomos",t:"A",m:85000},{d:"2025-08",s:"C6 Bank Atomos",t:"B",m:20000},
+  {d:"2025-08",s:"LATAM Airlines",t:"A",m:800},{d:"2025-08",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-09",s:"Itaú LATAM Infinite",t:"A",m:5000},{d:"2025-09",s:"Itaú LATAM Infinite",t:"B",m:3500},{d:"2025-09",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-10",s:"Itaú LATAM Infinite",t:"A",m:4200},{d:"2025-10",s:"Itaú LATAM Infinite",t:"B",m:2940},{d:"2025-10",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-11",s:"IUPP Itaú",t:"A",m:8000},{d:"2025-11",s:"IUPP Itaú",t:"B",m:2400},{d:"2025-11",s:"Itaú LATAM Infinite",t:"A",m:7000},{d:"2025-11",s:"Itaú LATAM Infinite",t:"B",m:4900},
+  {d:"2025-11",s:"LATAM Airlines",t:"A",m:5000},{d:"2025-11",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-12",s:"Itaú LATAM Infinite",t:"A",m:12000},{d:"2025-12",s:"Itaú LATAM Infinite",t:"B",m:8400},{d:"2025-12",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2026-01",s:"C6 Bank Atomos",t:"A",m:5000},{d:"2026-01",s:"C6 Bank Atomos",t:"B",m:1500},{d:"2026-01",s:"Itaú LATAM Infinite",t:"A",m:30000},{d:"2026-01",s:"Itaú LATAM Infinite",t:"B",m:21000},{d:"2026-01",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2026-02",s:"Itaú LATAM Infinite",t:"A",m:6000},{d:"2026-02",s:"Itaú LATAM Infinite",t:"B",m:3000},{d:"2026-02",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2026-03",s:"Itaú LATAM Infinite",t:"A",m:14000},{d:"2026-03",s:"Itaú LATAM Infinite",t:"B",m:7000},{d:"2026-03",s:"LATAM Pass Clube",t:"A",m:11500},
+];
+// ===== FIM DADOS FICTÍCIOS =====
+
+const BAL=350000,MKT=0.025,BCAP=30000;
+const UM={"2025-07":5.47,"2025-08":5.51,"2025-09":5.44,"2025-10":5.70,"2025-11":5.81,"2025-12":6.07,"2026-01":6.02,"2026-02":5.78,"2026-03":5.72};
+const LBL={"2025-07":"Jul/25","2025-08":"Ago/25","2025-09":"Set/25","2025-10":"Out/25","2025-11":"Nov/25","2025-12":"Dez/25","2026-01":"Jan/26","2026-02":"Fev/26","2026-03":"Mar/26"};
+const CP={pct:50,until:"30/04/2026",label:"Clube+Itaú: +50% bônus acúmulo*"};
+
+const CARDS=[
+  {id:"inf",n:"LATAM Infinite",r:2.5,rClub:3.75,a:100,i1:20000,i5:10000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"c6c",n:"C6 Carbon",r:2.5,rClub:3.375,a:0,i1:999999,i5:999999,type:"transfer",prog:"Átomos→LATAM",bonusNote:"clube +35%"},
+  {id:"one",n:"The One",r:3.0,rClub:4.05,a:333,i1:999999,i5:999999,type:"transfer",prog:"Itaú Pts→LATAM",bonusNote:"clube +35%"},
+];
+const CLUBS=[
+  {id:"0",n:"Sem Clube",p:0,mi:0,pq:0},
+  {id:"b",n:"Base",p:40.90,mi:1000,pq:0},
+  {id:"be",n:"Base+Emb",p:90.80,mi:1000,pq:750},
+  {id:"ba",n:"Base+Acel",p:187.80,mi:5500,pq:0},
+  {id:"bt",n:"Base+Turbo",p:356.80,mi:11500,pq:0},
+  {id:"bte",n:"Base+Turbo+Emb",p:406.70,mi:11500,pq:750},
+];
+
+const Z={bg:"#0b0f1a",cd:"#111827",ca:"#0f172a",bd:"#1e293b",ac:"#6366f1",bn:"#f59e0b",am:"#3b82f6",gn:"#10b981",rd:"#ef4444",or:"#f97316",tx:"#e2e8f0",mu:"#94a3b8",dm:"#475569",gr:"#1e293b"};
+const SCC={"Itaú LATAM Infinite":"#f97316","LATAM Pass Clube":"#10b981","C6 Bank Atomos":"#8b5cf6","IUPP Itaú":"#ec4899","LATAM Airlines":"#06b6d4","LATAM Travel":"#14b8a6","Amazon":"#fbbf24"};
+const fm=n=>n.toLocaleString("pt-BR");
+const fR=n=>"R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:0});
+function cCol(v){if(v==null)return Z.dm;if(v>=MKT)return Z.rd;const t=Math.min(v/MKT,1);return`rgb(${Math.round(4+t*106)},${Math.round(120+t*111)},${Math.round(87+t*96)})`;}
+
+const Kpi=({label,value,sub,color})=>(<div style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:14,padding:"14px 16px",flex:"1 1 145px",minWidth:135,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,width:3,height:"100%",background:color}}/><div style={{fontSize:10,color:Z.mu,textTransform:"uppercase",letterSpacing:1.5,fontWeight:700,marginBottom:6}}>{label}</div><div style={{fontSize:20,fontWeight:800,color:Z.tx,fontFamily:"'Space Mono',monospace",letterSpacing:-1}}>{value}</div>{sub&&<div style={{fontSize:10,color:Z.dm,marginTop:4,lineHeight:1.3}}>{sub}</div>}</div>);
+const Wr=({title,sub,children})=>(<div style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:14,padding:"16px 6px 6px 0",marginBottom:14}}><div style={{marginLeft:16,marginBottom:10}}><div style={{fontSize:12,fontWeight:700,color:Z.tx}}>{title}</div>{sub&&<div style={{fontSize:10,color:Z.dm,marginTop:2}}>{sub}</div>}</div>{children}</div>);
+const Tp=({active,payload,label})=>{if(!active||!payload?.length)return null;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px",boxShadow:"0 12px 40px rgba(0,0,0,0.5)",maxWidth:240}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:6}}>{label}</div>{payload.filter(p=>p.value!=null).map((p,i)=>(<div key={i} style={{color:p.color||p.fill||p.stroke,fontSize:11,marginBottom:2,display:"flex",justifyContent:"space-between",gap:12}}><span>{p.name}</span><strong>{Math.abs(p.value)>100?fm(Math.round(p.value)):p.value?.toFixed?.(4)}</strong></div>))}</div>);};
+const Dl=({v,inv})=>{const g=inv?v<0:v>0;const c=Math.abs(v)<0.5?Z.dm:g?Z.gn:Z.rd;const px=v>0?"+":"";return(<span style={{color:c,fontWeight:700}}>{Math.abs(v)>10?`${px}${fm(Math.round(v))}`:`${px}${v.toFixed(4)}`}</span>);};
+
+function App(){
+  const[view,setView]=useState("timeline");
+  const[bx,setBx]=useState(null);
+
+  const md=useMemo(()=>{
+    const m={};
+    TX.forEach(tx=>{
+      if(!m[tx.d])m[tx.d]={key:tx.d,label:LBL[tx.d],total:0,itauBase:0,itauBonus:0,clubeFix:0,bonusTransf:0,extBase:0,acumulo:0,bonus:0};
+      const o=m[tx.d];
+      o.total+=tx.m;
+      if(tx.t==="B")o.bonus+=tx.m;else o.acumulo+=tx.m;
+      if(tx.s==="Itaú LATAM Infinite"&&tx.t==="A")o.itauBase+=tx.m;
+      if(tx.s==="Itaú LATAM Infinite"&&tx.t==="B")o.itauBonus+=tx.m;
+      if(tx.s==="LATAM Pass Clube")o.clubeFix+=tx.m;
+      if(["C6 Bank Atomos","IUPP Itaú","LATAM Travel"].includes(tx.s)&&tx.t==="B")o.bonusTransf+=tx.m;
+      if(!["Itaú LATAM Infinite","LATAM Pass Clube"].includes(tx.s)&&tx.t==="A")o.extBase+=tx.m;
+    });
+    const arr=Object.values(m).sort((a,b)=>a.key.localeCompare(b.key));
+    let cumTot=0,cumExt=0,cumCost=0;
+    return arr.map((o,idx)=>{
+      cumTot+=o.total;
+      const usd=UM[o.key]||5.70;
+      const spUSD=o.itauBase/2.5;
+      const spBRL=spUSD*usd;
+      const baseline=o.itauBase;
+      const extras=o.clubeFix+o.itauBonus+o.bonusTransf;
+      cumExt+=extras;
+      const ad=spBRL>=20000?1:spBRL>=10000?0.5:0;
+      const anPaga=100*(1-ad);
+      const cost=406.70+anPaga;
+      cumCost+=cost;
+      const isCar=idx===0&&o.itauBase===0;
+      const cpct=o.itauBase>0?Math.round((o.itauBonus/o.itauBase)*100):0;
+      const cpmExtra=isCar?null:(extras>0?cost/extras:null);
+      return{...o,cumTot,cumExt,cumCost,spBRL:Math.round(spBRL),spUSD:Math.round(spUSD),usd,
+        baseline,extras,adPct:Math.round(ad*100),anPaga:Math.round(anPaga),cost:Math.round(cost),
+        cpmExtra,cpct,isCar};
+    });
+  },[]);
+
+  const bySrc=useMemo(()=>{
+    const s={};TX.forEach(t=>{if(!s[t.s])s[t.s]={name:t.s,total:0,bonus:0,acumulo:0};s[t.s].total+=t.m;if(t.t==="B")s[t.s].bonus+=t.m;else s[t.s].acumulo+=t.m;});
+    return Object.values(s).sort((a,b)=>b.total-a.total);
+  },[]);
+  const pie=useMemo(()=>bySrc.map(s=>({name:s.name,value:s.total,fill:SCC[s.name]||"#64748b"})),[bySrc]);
+
+  const tA=BAL;
+  const actM=md.filter(m=>!m.isCar);
+  const tCost=actM.reduce((s,m)=>s+m.cost,0);
+  const tExtras=actM.reduce((s,m)=>s+m.extras,0);
+  const cpmExtra=tCost/tExtras;
+  const roiUnified=((tExtras*MKT-tCost)/tCost)*100;
+
+  const lm=md[md.length-1];
+  const bench=useMemo(()=>{
+    if(!lm)return[];
+    const spUSD=lm.spUSD;
+    const spBRL=lm.spBRL;
+    const bMi=Math.round(spUSD*2.5);
+    const sim=(card,club)=>{
+      const hasClub=club.id!=="0";
+      const rate=hasClub?card.rClub:card.r;
+      const cardMi=Math.round(spUSD*rate);
+      const clubMi=club.mi;
+      const tot=cardMi+clubMi;
+      let anPaga=card.a;
+      if(card.id==="inf"){
+        if(spBRL>=card.i1)anPaga=0;
+        else if(spBRL>=card.i5)anPaga=card.a*0.5;
+      }
+      const cost=club.p+anPaga;
+      const extraMi=tot-bMi;
+      const extraCost=cost;
+      const roiInc=extraCost>0?((extraMi*MKT-extraCost)/extraCost)*100:(extraMi>0?Infinity:0);
+      const cpmInc=extraMi>0&&extraCost>0?extraCost/extraMi:extraMi>0?0:999;
+      return{card:card.n,cid:card.id,prog:card.prog,bNote:card.bonusNote,
+        club:club.n,clid:club.id,rate,cardMi,clubMi,tot,
+        anPaga:Math.round(anPaga),clubP:club.p,cost:Math.round(cost*100)/100,
+        extraMi,extraCost:Math.round(extraCost*100)/100,roiInc:Math.round(roiInc),cpmInc,
+        pq:club.pq,isCur:card.id==="inf"&&club.id==="bte",isBase:card.id==="c6c"&&club.id==="0"};
+    };
+    const r=[];CARDS.forEach(c=>CLUBS.forEach(cl=>r.push(sim(c,cl))));
+    return r.sort((a,b)=>{
+      if(a.isBase)return-1;if(b.isBase)return 1;
+      if(a.isCur)return-1;if(b.isCur)return 1;
+      return(b.roiInc||0)-(a.roiInc||0);
+    });
+  },[lm]);
+
+  const tabs=[{id:"timeline",l:"Temporal"},{id:"roi",l:"ROI"},{id:"bench",l:"Bench"},{id:"sources",l:"Fontes"}];
+  const roiData=actM;
+  const roiChart=useMemo(()=>{let ce=0,cc=0;return roiData.map(m=>{ce+=m.extras;cc+=m.cost;return{...m,rCumExt:ce,rCumCo:cc};});},[roiData]);
+
+  return(
+    <div style={{background:Z.bg,minHeight:"100vh",padding:"20px 14px 40px",fontFamily:"'Inter',-apple-system,sans-serif",color:Z.tx,maxWidth:520,margin:"0 auto"}}>
+      <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+      <div style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:10,padding:"10px 14px",marginBottom:16,textAlign:"center"}}>
+        <div style={{fontSize:11,fontWeight:700,color:Z.ac}}>Demo com dados fictícios</div>
+        <div style={{fontSize:10,color:Z.dm,marginTop:2}}>Use a skill para gerar com seus dados reais</div>
+      </div>
+
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,color:Z.ac,textTransform:"uppercase",letterSpacing:3,fontWeight:700}}>LATAM Pass Dashboard</div>
+        <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.8,marginTop:2}}>Milhas & ROI</div>
+        <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
+          <span style={{fontSize:9,background:"rgba(249,115,22,0.15)",color:"#f97316",padding:"3px 8px",borderRadius:6,fontWeight:700}}>Visa Infinite Personnalité</span>
+          <span style={{fontSize:9,background:"rgba(16,185,129,0.15)",color:"#10b981",padding:"3px 8px",borderRadius:6,fontWeight:700}}>Clube Base+Turbo+Embarque</span>
+        </div>
+        <div style={{fontSize:11,color:Z.dm,marginTop:6}}>Jul/25 – Mar/26 · Saldo: {fm(BAL)}</div>
+      </div>
+
+      <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><div style={{fontSize:10,fontWeight:700,color:Z.bn}}>Campanha Ativa*</div><div style={{fontSize:10,color:Z.dm,marginTop:2}}>{CP.label}</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:16,fontWeight:800,color:Z.bn,fontFamily:"'Space Mono',monospace"}}>+{CP.pct}%</div><div style={{fontSize:9,color:Z.dm}}>até {CP.until}</div></div>
+      </div>
+
+      <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+        <Kpi label="Saldo Total" value={fm(tA)} sub={`${fm(tExtras)} extras geradas`} color={Z.gn}/>
+        <Kpi label="Custo (clube+an.)" value={fR(Math.round(tCost))} sub={`${actM.length} meses · baseline R$0`} color={Z.rd}/>
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        <Kpi label="R$/mi extra" value={`R$ ${cpmExtra.toFixed(3)}`} sub="vs R$0,025 mercado" color={Z.or}/>
+        <Kpi label="ROI" value={`${roiUnified>=0?"+":""}${roiUnified.toFixed(0)}%`} sub="ref: R$0,025/mi (mercado)" color={roiUnified>=0?Z.gn:Z.rd}/>
+      </div>
+
+      <div style={{display:"flex",gap:3,marginBottom:14,background:Z.ca,borderRadius:10,padding:3}}>
+        {tabs.map(t=>(<button key={t.id} onClick={()=>setView(t.id)} style={{flex:1,padding:"7px 0",fontSize:10,fontWeight:700,border:"none",borderRadius:8,cursor:"pointer",background:view===t.id?Z.ac:"transparent",color:view===t.id?"#fff":Z.mu}}>{t.l}</button>))}
+      </div>
+
+      {view==="timeline"&&(<>
+        <Wr title="Evolução Acumulada" sub="Faixas = campanhas de bônus Itaú*">
+          <ResponsiveContainer width="100%" height={210}>
+            <AreaChart data={md} margin={{top:5,right:16,left:0,bottom:0}}>
+              <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={Z.ac} stopOpacity={0.4}/><stop offset="100%" stopColor={Z.ac} stopOpacity={0}/></linearGradient></defs>
+              <ReferenceArea x1="Jul/25" x2="Jan/26" fill="rgba(16,185,129,0.06)"/>
+              <ReferenceArea x1="Fev/26" x2="Mar/26" fill="rgba(245,158,11,0.06)"/>
+              <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
+              <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} tickFormatter={v=>`${Math.round(v/1000)}k`} width={36}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const d=md.find(m=>m.label===label);return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}: {fm(payload[0]?.value)}</div>{d&&<div style={{fontSize:10,color:Z.dm}}>Extras: {fm(d.extras)} · Base: {fm(d.baseline)}</div>}{d?.isCar&&<div style={{fontSize:10,color:Z.ac}}>Carência</div>}{d?.cpct>0&&<div style={{fontSize:10,color:d.cpct>=70?Z.gn:Z.bn}}>Bônus Itaú*: +{d.cpct}%</div>}</div>);}}/>
+              <Area type="monotone" dataKey="cumTot" name="Acumulado" stroke={Z.ac} strokeWidth={2.5} fill="url(#g1)" dot={{r:3,fill:Z.ac,strokeWidth:0}}/>
+            </AreaChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",justifyContent:"center",gap:12,padding:"4px 0 10px",fontSize:9,color:Z.dm}}>
+            <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:14,height:8,background:"rgba(16,185,129,0.15)",borderRadius:2}}/> 70%*</span>
+            <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:14,height:8,background:"rgba(245,158,11,0.15)",borderRadius:2}}/> 50%*</span>
+          </div>
+        </Wr>
+        <Wr title="Extras vs Baseline" sub="Extras = clube fixo + bônus campanha* + bônus transf.">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={md} margin={{top:5,right:16,left:0,bottom:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
+              <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} tickFormatter={v=>`${Math.round(v/1000)}k`} width={36}/>
+              <Tooltip content={<Tp/>}/>
+              <Bar dataKey="baseline" name="Baseline (C6 grátis)" stackId="a" fill={Z.dm}/>
+              <Bar dataKey="extras" name="Extras (clube+bônus)" stackId="a" fill={Z.gn}/>
+              <Bar dataKey="extBase" name="Externas" stackId="a" fill={Z.ac} radius={[4,4,0,0]}/>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",justifyContent:"center",gap:12,padding:"6px 0 10px",fontSize:9}}>
+            {[["Baseline",Z.dm],["Extras",Z.gn],["Externas",Z.ac]].map(([l,c])=>(<div key={l} style={{display:"flex",alignItems:"center",gap:4,color:Z.mu}}><div style={{width:10,height:10,borderRadius:2,background:c}}/>{l}</div>))}
+          </div>
+        </Wr>
+        <div style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:12,padding:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:Z.tx,marginBottom:8}}>Bônus detectados</div>
+          {md.map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:`1px solid ${Z.bd}`,fontSize:10}}>
+            <span style={{color:Z.mu}}>{m.label}</span>
+            <div style={{display:"flex",gap:8}}>
+              {m.isCar&&<span style={{color:Z.dm,fontStyle:"italic"}}>Carência</span>}
+              {m.cpct>0&&<span style={{color:m.cpct>=70?Z.gn:Z.bn,fontWeight:700}}>Itaú* +{m.cpct}%</span>}
+              {m.bonusTransf>0&&<span style={{color:Z.ac,fontWeight:700}}>Transf. +{fm(m.bonusTransf)}</span>}
+              {m.cpct===0&&!m.isCar&&m.bonusTransf===0&&<span style={{color:Z.dm}}>—</span>}
+            </div>
+          </div>))}
+          <div style={{fontSize:9,color:Z.dm,marginTop:8,fontStyle:"italic"}}>* Campanha recorrente, sujeita a renovação</div>
+        </div>
+      </>)}
+
+      {view==="roi"&&(<>
+        <div style={{background:"rgba(99,102,241,0.06)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:10,padding:"8px 14px",marginBottom:14,fontSize:10,color:Z.dm}}>
+          ROI = (extras × R$0,025 − custo) ÷ custo · Ref: cotação de mercado (Balcão de Milhas)
+        </div>
+        <Wr title="Valor Extras vs Custo" sub="Verde = valor extras (R$0,025/mi) · Vermelho = custo">
+          <ResponsiveContainer width="100%" height={220}>
+            <ComposedChart data={roiChart} margin={{top:5,right:16,left:0,bottom:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
+              <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} tickFormatter={v=>`${Math.round(v/1000)}k`} width={36}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:6}}>{label}</div>{payload.map((p,i)=>(<div key={i} style={{color:p.stroke,fontSize:11}}>{p.name}: <strong>{fR(Math.round(p.value))}</strong></div>))}</div>);}}/>
+              <Area type="monotone" dataKey={d=>d.rCumExt*MKT} name="Valor Extras" stroke={Z.gn} fill="rgba(16,185,129,0.1)" strokeWidth={2}/>
+              <Line type="monotone" dataKey="rCumCo" name="Custo" stroke={Z.rd} strokeWidth={2.5} dot={{r:3,fill:Z.rd,strokeWidth:0}}/>
+            </ComposedChart>
+          </ResponsiveContainer>
+        </Wr>
+        <Wr title="R$/milha extra por Mês" sub="Gradiente vs R$0,025 (cotação mercado) · Linha = ref mercado">
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={roiData} margin={{top:5,right:16,left:0,bottom:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
+              <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} width={36} domain={[0,'auto']}/>
+              <ReferenceLine y={MKT} stroke={Z.bn} strokeDasharray="6 3" strokeWidth={1.5} label={{value:"R$0,025",position:"right",fill:Z.bn,fontSize:9}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0].value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi extra: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"Abaixo do mercado":"Acima do mercado"}</div></div>);}}/>
+              <Bar dataKey="cpmExtra" radius={[4,4,0,0]}>{roiData.map((m,i)=>(<Cell key={i} fill={cCol(m.cpmExtra)}/>))}</Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"6px 16px 10px",fontSize:9,color:Z.dm}}>
+            <span style={{width:10,height:10,borderRadius:2,background:cCol(0.001)}}/><span>Eficiente</span>
+            <div style={{width:60,height:8,borderRadius:4,background:"linear-gradient(to right,#047857,#6ee7b7,#ef4444)"}}/>
+            <span>Caro</span><span style={{width:10,height:10,borderRadius:2,background:Z.rd}}/>
+            <span style={{marginLeft:4}}>--- R$0,025</span>
+          </div>
+        </Wr>
+        <Wr title="R$/milha extra Acumulado" sub="Média móvel acumulada · Mostra tendência real do ROI">
+          <ResponsiveContainer width="100%" height={180}>
+            <ComposedChart data={roiChart} margin={{top:5,right:16,left:0,bottom:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
+              <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
+              <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} width={36} domain={[0,0.032]}/>
+              <ReferenceLine y={MKT} stroke={Z.bn} strokeDasharray="6 3" strokeWidth={1.5} label={{value:"R$0,025",position:"right",fill:Z.bn,fontSize:9}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0]?.value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi acumulado: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"ROI positivo no acumulado":"ROI negativo no acumulado"}</div></div>);}}/>
+              <Area type="monotone" dataKey={d=>d.rCumCo/d.rCumExt} name="R$/mi acumulado" stroke={Z.ac} fill="rgba(99,102,241,0.1)" strokeWidth={2.5} dot={{r:3,fill:Z.ac,strokeWidth:0}}/>
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"6px 16px 10px",fontSize:9,color:Z.dm}}>
+            <span style={{width:10,height:10,borderRadius:2,background:Z.ac}}/><span>R$/mi acumulado</span>
+            <span style={{color:Z.bn}}>--- Mercado R$0,025</span>
+          </div>
+        </Wr>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {md.map((m,i)=>(<div key={i} style={{background:Z.cd,border:`1px solid ${m.isCar?"rgba(99,102,241,0.3)":Z.bd}`,borderRadius:12,padding:"10px 14px",opacity:m.isCar?0.5:1}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:13,fontWeight:700}}>{m.label} {m.isCar&&<span style={{fontSize:9,color:Z.ac}}>(carência)</span>}</span>
+              <span style={{fontSize:16,fontWeight:800,color:Z.ac,fontFamily:"'Space Mono',monospace"}}>{fm(m.total)}</span>
+            </div>
+            <div style={{display:"flex",gap:6,fontSize:10,color:Z.dm,flexWrap:"wrap"}}>
+              <span style={{color:Z.gn}}>Extras: {fm(m.extras)}</span>
+              <span>Base: {fm(m.baseline)}</span>
+              <span>Custo: {fR(m.cost)}</span>
+              {m.cpct>0&&<span style={{color:Z.bn}}>*+{m.cpct}%</span>}
+            </div>
+            {m.cpmExtra!=null&&<div style={{marginTop:4,fontSize:10}}><span style={{color:Z.dm}}>R$/mi extra: </span><span style={{color:cCol(m.cpmExtra),fontWeight:700}}>R$ {m.cpmExtra.toFixed(4)}</span></div>}
+          </div>))}
+        </div>
+      </>)}
+
+      {view==="bench"&&(<>
+        {bench.filter(b=>b.isBase).map((b,i)=>(<div key={i} style={{background:"rgba(139,92,246,0.08)",border:"1px solid rgba(139,92,246,0.3)",borderRadius:12,padding:14,marginBottom:8}}>
+          <div style={{fontSize:12,fontWeight:700,color:Z.tx,marginBottom:4}}>Baseline: {b.card} + {b.club}</div>
+          <div style={{fontSize:10,color:Z.dm,marginBottom:6}}>Anuidade R$0 · {b.prog} · {fm(lm?.spUSD||0)} USD · {b.rate} pts/USD</div>
+          <div style={{display:"flex",gap:10,fontSize:11}}><span><strong style={{color:Z.ac}}>{fm(b.tot)}</strong> milhas LATAM</span><span><strong style={{color:Z.gn}}>R$ 0</strong>/mês</span></div>
+        </div>))}
+
+        {bench.filter(b=>b.isCur).map((b,i)=>(<div key={i} style={{background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:12,padding:14,marginBottom:8}}>
+          <div style={{fontSize:12,fontWeight:700,color:Z.tx,marginBottom:4}}>Seu plano: {b.card} + {b.club}</div>
+          <div style={{fontSize:10,color:Z.dm,marginBottom:6}}>{b.prog} · {b.rate} mi/USD ({b.bNote})</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:11}}>
+            <span><strong style={{color:Z.ac}}>{fm(b.tot)}</strong> mi</span>
+            <span><strong style={{color:Z.rd}}>{fR(Math.round(b.cost))}</strong>/mês</span>
+            <span style={{color:Z.gn}}>+{fm(b.extraMi)} extras</span>
+            <span>ROI: <strong style={{color:b.roiInc>=0?Z.gn:Z.rd}}>{b.roiInc>=0?"+":""}{b.roiInc}%</strong></span>
+          </div>
+        </div>))}
+
+        <div style={{fontSize:10,color:Z.dm,marginBottom:10}}>
+          {bench.length} cenários · ROI = (extras×R$0,025 − custo) ÷ custo · Por ROI
+        </div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+          {bench.filter(b=>!b.isCur&&!b.isBase).map((b,i)=>{
+            const ex=bx===i;
+            const v=b.roiInc>50?"excelente":b.roiInc>0?"positivo":b.extraCost<=0?"grátis":"negativo";
+            const vc=v==="excelente"?Z.gn:v==="positivo"?"#22d3ee":v==="grátis"?Z.ac:Z.rd;
+            return(<div key={i} onClick={()=>setBx(ex?null:i)} style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:12,padding:"10px 12px",cursor:"pointer"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <div style={{fontSize:11,fontWeight:700}}>{b.card} + {b.club}</div>
+                <span style={{fontSize:8,background:`${vc}22`,color:vc,padding:"2px 8px",borderRadius:4,fontWeight:700,textTransform:"uppercase"}}>{v}</span>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:10}}>
+                <span style={{color:Z.dm}}>Extras: <Dl v={b.extraMi}/></span>
+                <span style={{color:Z.dm}}>Custo: {fR(Math.round(b.cost))}</span>
+                <span style={{color:Z.dm}}>ROI: <span style={{color:b.roiInc>=0?Z.gn:Z.rd,fontWeight:700}}>{b.roiInc>=0?"+":""}{b.roiInc}%</span></span>
+              </div>
+              {ex&&(<div style={{marginTop:10,paddingTop:8,borderTop:`1px solid ${Z.bd}`,fontSize:10,color:Z.dm,display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px"}}>
+                <div>Programa: <strong style={{color:Z.tx}}>{b.prog}</strong></div>
+                <div>Taxa: <strong style={{color:Z.tx}}>{b.rate} pts/USD</strong></div>
+                <div>Bônus: <strong style={{color:Z.tx}}>{b.bNote}</strong></div>
+                <div>Cartão→LATAM: <strong style={{color:Z.tx}}>{fm(b.cardMi)}</strong></div>
+                <div>Clube: <strong style={{color:Z.tx}}>{fm(b.clubMi)}/mês</strong></div>
+                <div>Total: <strong style={{color:Z.ac}}>{fm(b.tot)}</strong></div>
+                <div>Anuidade: <strong style={{color:Z.tx}}>{fR(b.anPaga)}</strong></div>
+                <div>Clube: <strong style={{color:Z.tx}}>{fR(Math.round(b.clubP))}</strong></div>
+                {b.pq>0&&<div>PQ: <strong style={{color:Z.bn}}>{b.pq}/mês</strong></div>}
+                <div>R$/mi extra: <strong style={{color:cCol(b.cpmInc)}}>{b.cpmInc<100?`R$ ${b.cpmInc.toFixed(4)}`:"-"}</strong></div>
+              </div>)}
+            </div>);
+          })}
+        </div>
+
+        <div style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:12,padding:14,marginTop:14,fontSize:10,color:Z.dm,lineHeight:1.6}}>
+          <div style={{fontWeight:700,color:Z.tx,marginBottom:6,fontSize:11}}>Premissas</div>
+          <p style={{margin:"0 0 4px"}}>• Baseline: <strong>C6 Carbon sem clube</strong> (2,5pts/USD, R$0)</p>
+          <p style={{margin:"0 0 4px"}}>• LATAM Infinite c/ clube: 3,75 mi/USD (2,5 + 50%*)</p>
+          <p style={{margin:"0 0 4px"}}>• C6 Carbon c/ clube: 3,375 pts/USD (2,5 + 35% transf.)</p>
+          <p style={{margin:"0 0 4px"}}>• The One c/ clube: 4,05 pts/USD (3,0 + 35% transf.)</p>
+          <p style={{margin:"0 0 4px"}}>• Ref: R$0,025/milha (cotação mercado, Balcão de Milhas)</p>
+          <p style={{margin:0}}>• * Campanha recorrente, sujeita a renovação</p>
+        </div>
+      </>)}
+
+      {view==="sources"&&(<>
+        <Wr title="Distribuição por Fonte">
+          <div style={{display:"flex",justifyContent:"center"}}><ResponsiveContainer width="100%" height={220}><PieChart><Pie data={pie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} strokeWidth={0}>{pie.map((e,i)=>(<Cell key={i} fill={e.fill}/>))}</Pie><Tooltip content={<Tp/>}/></PieChart></ResponsiveContainer></div>
+          <div style={{padding:"4px 16px 12px",display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}}>{pie.map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:Z.mu}}><div style={{width:8,height:8,borderRadius:"50%",background:s.fill,flexShrink:0}}/>{s.name}</div>))}</div>
+        </Wr>
+        {bySrc.map((s,i)=>{const p=((s.total/tA)*100).toFixed(1);const c=SCC[s.name]||"#64748b";return(
+          <div key={i} style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:12,padding:"12px 14px",marginBottom:6,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",bottom:0,left:0,height:3,width:`${p}%`,background:c}}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+              <div><div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{s.name}</div><div style={{fontSize:10,color:Z.dm}}>{fm(s.acumulo)} base · {fm(s.bonus)} bônus</div></div>
+              <div style={{textAlign:"right"}}><div style={{fontSize:16,fontWeight:800,color:c,fontFamily:"'Space Mono',monospace"}}>{fm(s.total)}</div><div style={{fontSize:10,color:Z.dm}}>{p}%</div></div>
+            </div>
+          </div>);})}
+      </>)}
+
+      <div style={{textAlign:"center",marginTop:24,fontSize:9,color:Z.dm,lineHeight:1.5}}>
+        Demo · {fm(tA)} milhas · {fm(tExtras)} extras · R${cpmExtra.toFixed(4)}/mi · ROI {roiUnified>=0?"+":""}{roiUnified.toFixed(0)}% · Ref R$0,025
+        <br/><span style={{fontStyle:"italic"}}>* Campanha recorrente, sujeita a renovação · Dados fictícios</span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

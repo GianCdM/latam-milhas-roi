@@ -1,6 +1,15 @@
 # Dados pessoais (nunca commitar)
 personal/
 
+# AI coding assistants
+.claude/
+.cursor/
+.codex/
+.copilot/
+.aider*
+.codeium/
+.continue/
+
 # OS
 .DS_Store
 Thumbs.db
