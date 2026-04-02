@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Validação de extrato de milhas LATAM Pass.
-Uso: python validate.py personal/transactions.json --saldo 415531
+Uso: python validate.py personal/transactions.json --saldo SEU_SALDO
 """
 
 import json
@@ -17,6 +17,12 @@ def validate(transactions_file, expected_saldo):
     acumulo = sum(t['m'] for t in tx if t['t'] == 'A')
 
     # Monthly breakdown
+    # Fontes de cartões "direct" (Itaú LATAM Pass) — para detecção de campanha
+    itau_fontes = {
+        'Itaú LATAM Infinite', 'Itaú LATAM Black',
+        'Itaú LATAM Platinum', 'Itaú LATAM Gold', 'Itaú LATAM Internacional'
+    }
+
     months = {}
     for t in tx:
         d = t['d']
@@ -27,7 +33,7 @@ def validate(transactions_file, expected_saldo):
             months[d]['bonus'] += t['m']
         else:
             months[d]['acumulo'] += t['m']
-        if t['s'] == 'Itaú LATAM Infinite':
+        if t['s'] in itau_fontes:
             if t['t'] == 'A':
                 months[d]['itau_base'] += t['m']
             else:

@@ -68,7 +68,7 @@ Ou simplesmente converse com o Claude — ele faz as perguntas e gera tudo.
 ## Validação
 
 ```bash
-python scripts/validate.py personal/transactions.json --saldo 415531
+python scripts/validate.py personal/transactions.json --saldo SEU_SALDO_AQUI
 ```
 
 ## Fórmula do ROI

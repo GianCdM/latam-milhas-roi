@@ -1,13 +1,15 @@
 {
+  "_comentario": "EXEMPLO FICTÍCIO — substituir pelos dados reais do usuário no onboarding",
   "saldo": 0,
   "cartao_principal": {
-    "id": "inf",
+    "id": "exemplo_inf",
     "nome": "LATAM Pass Itaú Visa Infinite",
     "taxa_nac": 2.5,
     "taxa_int": 3.5,
     "anuidade_mensal": 105,
     "anuidade_paga": true,
     "isencao": null,
+    "isencao_detalhe": null,
     "isencao_100_pct": 20000,
     "isencao_50_pct": 10000,
     "tipo": "direct",
@@ -15,7 +17,8 @@
   },
   "cartoes_secundarios": [
     {
-      "id": "c6c",
+      "_comentario": "Exemplo de cartão transfer com isenção por investimento",
+      "id": "exemplo_c6",
       "nome": "C6 Carbon",
       "taxa_nac": 2.5,
       "anuidade_mensal": 98,
@@ -26,13 +29,14 @@
       "programa": "Átomos→LATAM"
     },
     {
-      "id": "nuv",
+      "_comentario": "Exemplo de cartão com Modo LATAM Pass ativo",
+      "id": "exemplo_nuv",
       "nome": "Nubank Ultravioleta",
       "taxa_nac": 2.2,
       "anuidade_mensal": 89,
       "anuidade_paga": false,
-      "isencao": "promocao_temporal",
-      "isencao_detalhe": "12 meses grátis (até MM/YYYY)",
+      "isencao": "gasto_minimo",
+      "isencao_detalhe": "≥R$8k/mês no cartão",
       "modo_latam_pass": true,
       "bonus_modo_latam": 0.10,
       "taxa_efetiva_com_modo": 2.42,
@@ -41,39 +45,36 @@
     }
   ],
   "clube": {
-    "id": "bte",
-    "nome": "Base+Turbo+Embarque",
-    "preco_mensal": 406.70,
+    "_comentario": "Trocar pelo plano real do usuário. IDs: sem/base/bm/be/ba/bt/bte",
+    "id": "bt",
+    "nome": "Base+Turbo",
+    "preco_mensal": 356.80,
     "milhas_fixas_com_itau": 11500,
     "milhas_fixas_sem_itau": 10000,
-    "pq_mensal_com_itau": 750,
-    "pq_mensal_sem_itau": 500,
+    "pq_mensal_com_itau": 0,
+    "pq_mensal_sem_itau": 0,
     "bonus_transferencia_com_itau": 0.35,
     "bonus_transferencia_sem_itau": 0.30
   },
-  "categoria_elite": "Platinum",
+  "categoria_elite": "Gold",
   "campanha_ativa": {
+    "_comentario": "Verificar campanha vigente antes de gerar o dashboard",
     "pct": 50,
     "ate": "30/04/2026",
     "descricao": "Clube+Itaú: +50% bônus acúmulo",
     "recorrente": true
   },
   "mkt_ref": 0.025,
-  "mkt_fonte": "Balcão de Milhas",
+  "mkt_fonte": "Balcão de Milhas (referência abr/2026)",
   "mkt_alternativo": {
     "venda_mercado": 0.025,
     "resgate_economico": 0.040,
     "resgate_executiva": 0.080
   },
   "cambio_ptax": {
-    "2025-07": 5.47,
-    "2025-08": 5.51,
-    "2025-09": 5.44,
-    "2025-10": 5.70,
-    "2025-11": 5.81,
-    "2025-12": 6.07,
-    "2026-01": 6.02,
-    "2026-02": 5.78,
-    "2026-03": 5.72
+    "_comentario": "Preencher com PTAX média de cada mês do extrato",
+    "2025-01": 5.95,
+    "2025-02": 5.80,
+    "2025-03": 5.72
   }
 }

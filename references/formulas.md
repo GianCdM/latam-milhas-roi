@@ -36,16 +36,35 @@ Este ROI é uma **estimativa teórica baseada no valor de mercado** (preço de v
 
 ## Classificação de milhas
 
-### Baseline
-Cartão de menor custo do usuário, sem clube. Exemplo: C6 Carbon com isenção (2,5 pts/USD, custo R$ 0).
+### Baseline (dinâmico)
 
-> **Importante**: Se o usuário tem isenção de anuidade por investimento ou gasto, o custo do cartão é R$0 para fins de baseline. Perguntar no onboarding.
+O baseline é determinado automaticamente a partir do perfil do usuário:
+
+```
+Algoritmo:
+1. Filtrar todos os cartões do usuário onde custo_efetivo == 0
+   (anuidade isenta por investimento, gasto mínimo, promoção, etc.)
+2. Se há cartões com custo zero:
+   → baseline = cartão com maior taxa de acúmulo (pts/USD) entre eles, sem clube
+3. Se NENHUM cartão tem custo zero:
+   → baseline = cartão com menor custo_efetivo_mensal, sem clube
+4. baseline_milhas = gasto_USD × baseline_cartao.taxa_nac
+5. baseline_custo = baseline_cartao.custo_efetivo_mensal (0 se isento)
+```
+
+> **Importante**: Isenção de anuidade (por investimento, gasto mínimo ou promoção) significa custo R$0 para fins de baseline. Sempre perguntar no onboarding.
+
+Exemplos:
+- Usuário tem C6 Carbon isento (2,5 pts/USD) e Nubank UV isento (2,2 pts/USD) → baseline = C6 Carbon (maior taxa, custo zero)
+- Usuário tem apenas Itaú Infinite pagando R$105/mês → baseline = Itaú Infinite sem clube (único cartão)
+- Usuário tem C6 Carbon isento (2,5 pts/USD) e BRB DUX pagando R$140/mês → baseline = C6 Carbon (custo zero, maior taxa entre os gratuitos)
 
 ### Milhas extras
 Tudo que só existe porque o usuário paga:
-- **Clube fixo**: milhas mensais do plano (ex: 11.500 com Turbo+Itaú)
+- **Clube fixo**: milhas mensais do plano (usar valores com/sem Itaú conforme cartão principal do usuário)
 - **Bônus campanha***: % extra sobre acúmulo do cartão co-branded Itaú (requer cartão + clube)
 - **Bônus transferência**: % extra sobre transferências externas (requer clube)
+- **Bônus Modo LATAM (Nubank)**: 10% permanente sobre transferências automáticas
 
 ### Externas
 Acúmulo base de fontes independentes do investimento (base do C6, IUPP, Amazon, voos, Nubank base).
@@ -63,23 +82,33 @@ Se R$/mi < MKT → ROI positivo (gerando milhas mais baratas que o mercado).
 Para cada combinação cartão × clube:
 
 ```
-# Determinar se o cartão é LATAM Pass Itaú
-isItau = cartao.tipo == "direct"
+# Determinar tipo do cartão no cenário
+cartaoIsItau = cartao.tipo == "direct"
 
-# Milhas do clube (diferente com/sem Itaú)
-clubMi = isItau ? clube.milhas_com_itau : clube.milhas_sem_itau
+# ⚠️ IMPORTANTE: Para o bench, cada cenário simula um setup ISOLADO.
+# Se o cenário usa cartão Itaú → benefícios "com Itaú" se aplicam.
+# Se o cenário usa cartão transfer (C6, Nubank, etc.) SEM nenhum Itaú → benefícios "sem Itaú".
+# Se o cenário usa cartão transfer MAS o usuário TAMBÉM tem Itaú → "com Itaú".
+# Documentar essa premissa no dashboard.
+
+temItauNoCenario = cartaoIsItau || cenario.inclui_cartao_itau
+
+# Milhas fixas do clube (diferente com/sem Itaú)
+clubMi = temItauNoCenario ? clube.milhas_com_itau : clube.milhas_sem_itau
 
 # Taxa efetiva com clube
-if isItau:
+if cartaoIsItau:
+    # Cartões direct recebem bônus de campanha* (recorrente, sujeita a renovação)
     taxaEfetiva = cartao.taxa_base × (1 + campanha_pct / 100)
 else:
-    bonusTransf = isItau ? clube.bonus_transf_com_itau : clube.bonus_transf_sem_itau
+    # Cartões transfer recebem bônus de transferência do clube
+    bonusTransf = temItauNoCenario ? clube.bonus_transf_com_itau : clube.bonus_transf_sem_itau
     taxaEfetiva = cartao.taxa_base × (1 + bonusTransf)
 
 # Cálculo
 cardMi = USD_gastos × taxaEfetiva
 total = cardMi + clubMi
-extras = total − baseline
+extras = total − baseline_milhas
 custo = anuidade_cartao + clube_mensal  # anuidade=0 se isento
 ROI = (extras × MKT − custo) ÷ custo × 100
 ```
@@ -104,17 +133,29 @@ ROI = (extras × MKT − custo) ÷ custo × 100
 
 ## Detecção de campanhas
 
+Aplicável apenas quando o usuário tem cartão "direct" (Itaú LATAM Pass):
+
 ```
-campanha_pct = itauBonus ÷ itauBase × 100
+# Detectar automaticamente a partir do extrato
+acumuloBase = soma de milhas tipo "A" da fonte do cartão Itaú no mês
+bonusCampanha = soma de milhas tipo "B" da fonte do cartão Itaú no mês
+campanha_pct = bonusCampanha ÷ acumuloBase × 100
 ```
 
-Se > 0% em um mês, há campanha ativa.
+Se > 0% em um mês, há campanha ativa. Se o usuário não tem cartão Itaú, este cálculo não se aplica.
 
 ## Carência
 
 Primeiro mês do extrato sem dados do cartão principal = carência.
-Regra: `idx === 0 && itauBase === 0`
+Regra:
+```
+# Genérico — funciona para qualquer cartão principal (não apenas Itaú)
+cartaoPrincipalFonte = identificar_fonte(config.cartao_principal)
+carencia = idx === 0 && acumulo_base_do_cartao_principal === 0
+```
 Excluído de todos os cálculos de ROI.
+
+> **Nota**: O cartão principal pode ser qualquer tipo (direct ou transfer). A detecção verifica se houve acúmulo base daquele cartão no primeiro mês, independente de qual cartão seja.
 
 ## Cap de bônus
 

@@ -131,12 +131,16 @@ Se não bater, investigar com o usuário antes de prosseguir.
 
 ## Passo 4: Classificação de milhas para ROI
 
-### Baseline
-Cartão de menor custo do usuário, sem clube. Exemplo: C6 Carbon com isenção por investimento (2,5 pts/USD, custo R$0).
+### Baseline (dinâmico)
+Determinado automaticamente a partir do perfil do usuário:
+1. Filtrar cartões com custo efetivo = R$0 (isenção por investimento, gasto ou promoção)
+2. Se há cartões gratuitos → baseline = o de maior taxa de acúmulo (pts/USD)
+3. Se nenhum é gratuito → baseline = o de menor custo mensal
+4. Sempre SEM clube
 
-> **Importante**: Considerar isenção de anuidade. Se o cartão tem isenção (por gasto ou investimento), o custo é R$0.
+> **Crítico**: Perguntar sobre isenção de anuidade no onboarding para cada cartão. Isso muda completamente o baseline e o ROI.
 
-Se o usuário não tem cartão com custo zero, usar o cartão de menor custo dele como baseline.
+Ver algoritmo completo em `references/formulas.md` (seção "Baseline dinâmico").
 
 ### Milhas extras (geradas pelo investimento)
 - **Clube fixo**: milhas mensais do plano (usar valores com/sem Itaú conforme o cartão principal)
@@ -149,11 +153,14 @@ Acúmulo base de fontes que não dependem do investimento.
 
 ### Detecção de campanhas
 ```
-campanha_pct = itauBonus ÷ itauBase × 100
+# Aplicável apenas para cartões "direct" (Itaú LATAM Pass)
+campanha_pct = bonusCartaoDirect ÷ acumuloBaseCartaoDirect × 100
 ```
+Se > 0% em um mês, há campanha ativa. Ver formulas.md para detalhes.
 
 ### Carência
-Primeiro mês sem dados do cartão principal = carência. Excluído dos cálculos de ROI.
+Primeiro mês do extrato sem acúmulo base do cartão principal = carência.
+Funciona para qualquer cartão principal (direct ou transfer). Excluído dos cálculos de ROI.
 
 ## Passo 5: Fórmulas
 
