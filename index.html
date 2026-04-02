@@ -22,30 +22,68 @@ const { useState, useMemo } = React;
 const { AreaChart, Area, BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, ReferenceArea, ReferenceLine } = Recharts;
 
 // ===== DADOS FICTÍCIOS (DEMO) =====
+// Perfil: LATAM Platinum (principal) + C6 Carbon (isento) + Clube Base+Turbo
+// Período: Set/25 – Mar/26 (7 meses) · Carência em Set/25 (sem Platinum, só Clube+voo)
 const TX = [
-  {d:"2025-07",s:"LATAM Airlines",t:"A",m:1200},
-  {d:"2025-08",s:"C6 Bank Atomos",t:"A",m:85000},{d:"2025-08",s:"C6 Bank Atomos",t:"B",m:20000},
-  {d:"2025-08",s:"LATAM Airlines",t:"A",m:800},{d:"2025-08",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2025-09",s:"Itaú LATAM Infinite",t:"A",m:5000},{d:"2025-09",s:"Itaú LATAM Infinite",t:"B",m:3500},{d:"2025-09",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2025-10",s:"Itaú LATAM Infinite",t:"A",m:4200},{d:"2025-10",s:"Itaú LATAM Infinite",t:"B",m:2940},{d:"2025-10",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2025-11",s:"IUPP Itaú",t:"A",m:8000},{d:"2025-11",s:"IUPP Itaú",t:"B",m:2400},{d:"2025-11",s:"Itaú LATAM Infinite",t:"A",m:7000},{d:"2025-11",s:"Itaú LATAM Infinite",t:"B",m:4900},
-  {d:"2025-11",s:"LATAM Airlines",t:"A",m:5000},{d:"2025-11",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2025-12",s:"Itaú LATAM Infinite",t:"A",m:12000},{d:"2025-12",s:"Itaú LATAM Infinite",t:"B",m:8400},{d:"2025-12",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2026-01",s:"C6 Bank Atomos",t:"A",m:5000},{d:"2026-01",s:"C6 Bank Atomos",t:"B",m:1500},{d:"2026-01",s:"Itaú LATAM Infinite",t:"A",m:30000},{d:"2026-01",s:"Itaú LATAM Infinite",t:"B",m:21000},{d:"2026-01",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2026-02",s:"Itaú LATAM Infinite",t:"A",m:6000},{d:"2026-02",s:"Itaú LATAM Infinite",t:"B",m:3000},{d:"2026-02",s:"LATAM Pass Clube",t:"A",m:11500},
-  {d:"2026-03",s:"Itaú LATAM Infinite",t:"A",m:14000},{d:"2026-03",s:"Itaú LATAM Infinite",t:"B",m:7000},{d:"2026-03",s:"LATAM Pass Clube",t:"A",m:11500},
+  // Set/25: carência — só Clube fixo + voo LATAM
+  {d:"2025-09",s:"LATAM Airlines",t:"A",m:2400},
+  {d:"2025-09",s:"LATAM Pass Clube",t:"A",m:11500},
+
+  // Out/25: Platinum base + bônus 70% + Clube + C6 transferência
+  {d:"2025-10",s:"Itaú LATAM Platinum",t:"A",m:3500},
+  {d:"2025-10",s:"Itaú LATAM Platinum",t:"B",m:2450},
+  {d:"2025-10",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-10",s:"C6 Bank Atomos",t:"A",m:12000},
+  {d:"2025-10",s:"C6 Bank Atomos",t:"B",m:4200},
+
+  // Nov/25: Platinum base + bônus 70% + Clube + Amazon
+  {d:"2025-11",s:"Itaú LATAM Platinum",t:"A",m:4000},
+  {d:"2025-11",s:"Itaú LATAM Platinum",t:"B",m:2800},
+  {d:"2025-11",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2025-11",s:"Amazon",t:"A",m:200},
+
+  // Dez/25: Platinum base alto (natal) + bônus 70% + Clube
+  {d:"2025-12",s:"Itaú LATAM Platinum",t:"A",m:8000},
+  {d:"2025-12",s:"Itaú LATAM Platinum",t:"B",m:5600},
+  {d:"2025-12",s:"LATAM Pass Clube",t:"A",m:11500},
+
+  // Jan/26: Platinum + bônus 70% + Clube + C6 grande
+  {d:"2026-01",s:"Itaú LATAM Platinum",t:"A",m:5500},
+  {d:"2026-01",s:"Itaú LATAM Platinum",t:"B",m:3850},
+  {d:"2026-01",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2026-01",s:"C6 Bank Atomos",t:"A",m:15000},
+  {d:"2026-01",s:"C6 Bank Atomos",t:"B",m:5250},
+
+  // Fev/26: Platinum + bônus 50% + Clube
+  {d:"2026-02",s:"Itaú LATAM Platinum",t:"A",m:3000},
+  {d:"2026-02",s:"Itaú LATAM Platinum",t:"B",m:1500},
+  {d:"2026-02",s:"LATAM Pass Clube",t:"A",m:11500},
+
+  // Mar/26: Platinum + bônus 50% + Clube + C6
+  {d:"2026-03",s:"Itaú LATAM Platinum",t:"A",m:6000},
+  {d:"2026-03",s:"Itaú LATAM Platinum",t:"B",m:3000},
+  {d:"2026-03",s:"LATAM Pass Clube",t:"A",m:11500},
+  {d:"2026-03",s:"C6 Bank Atomos",t:"A",m:8000},
+  {d:"2026-03",s:"C6 Bank Atomos",t:"B",m:2800},
 ];
 // ===== FIM DADOS FICTÍCIOS =====
 
-const BAL=350000,MKT=0.025,BCAP=30000;
-const UM={"2025-07":5.47,"2025-08":5.51,"2025-09":5.44,"2025-10":5.70,"2025-11":5.81,"2025-12":6.07,"2026-01":6.02,"2026-02":5.78,"2026-03":5.72};
-const LBL={"2025-07":"Jul/25","2025-08":"Ago/25","2025-09":"Set/25","2025-10":"Out/25","2025-11":"Nov/25","2025-12":"Dez/25","2026-01":"Jan/26","2026-02":"Fev/26","2026-03":"Mar/26"};
+const BAL=180000,MKT=0.025,BCAP=30000;
+const UM={"2025-09":5.44,"2025-10":5.70,"2025-11":5.81,"2025-12":6.07,"2026-01":6.02,"2026-02":5.78,"2026-03":5.72};
+const LBL={"2025-09":"Set/25","2025-10":"Out/25","2025-11":"Nov/25","2025-12":"Dez/25","2026-01":"Jan/26","2026-02":"Fev/26","2026-03":"Mar/26"};
 const CP={pct:50,until:"30/04/2026",label:"Clube+Itaú: +50% bônus acúmulo*"};
 
 const CARDS=[
-  {id:"inf",n:"LATAM Infinite",r:2.5,rClub:3.75,a:100,i1:20000,i5:10000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
-  {id:"c6c",n:"C6 Carbon",r:2.5,rClub:3.375,a:0,i1:999999,i5:999999,type:"transfer",prog:"Átomos→LATAM",bonusNote:"clube +35%"},
+  {id:"inf",n:"LATAM Infinite",r:2.5,rClub:3.75,a:105,i1:20000,i5:10000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"blk",n:"LATAM Black",r:2.5,rClub:3.75,a:105,i1:20000,i5:10000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"plt",n:"LATAM Platinum",r:2.0,rClub:3.0,a:62,i1:4000,i5:2000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"gld",n:"LATAM Gold",r:1.6,rClub:2.4,a:44,i1:2000,i5:1000,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"int",n:"LATAM Internacional",r:1.3,rClub:1.95,a:35,i1:1000,i5:999999,type:"direct",prog:"LATAM Pass",bonusNote:"*campanha +50%"},
+  {id:"c6c",n:"C6 Carbon",r:2.5,rClub:3.375,a:98,i1:999999,i5:999999,type:"transfer",prog:"Átomos→LATAM",bonusNote:"clube +35%"},
+  {id:"nuv",n:"Nubank Ultravioleta",r:2.2,rClub:2.97,a:89,i1:999999,i5:999999,type:"transfer",prog:"Pts Nubank→LATAM",bonusNote:"clube +35%"},
+  {id:"nml",n:"Nubank UV (Modo LATAM)",r:2.42,rClub:3.267,a:89,i1:999999,i5:999999,type:"transfer",prog:"Modo LATAM→LATAM",bonusNote:"+10% + clube 35%"},
   {id:"one",n:"The One",r:3.0,rClub:4.05,a:333,i1:999999,i5:999999,type:"transfer",prog:"Itaú Pts→LATAM",bonusNote:"clube +35%"},
+  {id:"brb",n:"BRB DUX",r:5.0,rClub:6.75,a:140,i1:999999,i5:999999,type:"transfer",prog:"Curtaí→LATAM",bonusNote:"clube +35%"},
 ];
 const CLUBS=[
   {id:"0",n:"Sem Clube",p:0,mi:0,pq:0},
@@ -57,7 +95,7 @@ const CLUBS=[
 ];
 
 const Z={bg:"#0b0f1a",cd:"#111827",ca:"#0f172a",bd:"#1e293b",ac:"#6366f1",bn:"#f59e0b",am:"#3b82f6",gn:"#10b981",rd:"#ef4444",or:"#f97316",tx:"#e2e8f0",mu:"#94a3b8",dm:"#475569",gr:"#1e293b"};
-const SCC={"Itaú LATAM Infinite":"#f97316","LATAM Pass Clube":"#10b981","C6 Bank Atomos":"#8b5cf6","IUPP Itaú":"#ec4899","LATAM Airlines":"#06b6d4","LATAM Travel":"#14b8a6","Amazon":"#fbbf24"};
+const SCC={"Itaú LATAM Platinum":"#f97316","LATAM Pass Clube":"#10b981","C6 Bank Atomos":"#8b5cf6","Amazon":"#fbbf24","LATAM Airlines":"#06b6d4","LATAM Travel":"#14b8a6","IUPP Itaú":"#ec4899"};
 const fm=n=>n.toLocaleString("pt-BR");
 const fR=n=>"R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:0});
 function cCol(v){if(v==null)return Z.dm;if(v>=MKT)return Z.rd;const t=Math.min(v/MKT,1);return`rgb(${Math.round(4+t*106)},${Math.round(120+t*111)},${Math.round(87+t*96)})`;}
@@ -78,28 +116,29 @@ function App(){
       const o=m[tx.d];
       o.total+=tx.m;
       if(tx.t==="B")o.bonus+=tx.m;else o.acumulo+=tx.m;
-      if(tx.s==="Itaú LATAM Infinite"&&tx.t==="A")o.itauBase+=tx.m;
-      if(tx.s==="Itaú LATAM Infinite"&&tx.t==="B")o.itauBonus+=tx.m;
+      if(tx.s==="Itaú LATAM Platinum"&&tx.t==="A")o.itauBase+=tx.m;
+      if(tx.s==="Itaú LATAM Platinum"&&tx.t==="B")o.itauBonus+=tx.m;
       if(tx.s==="LATAM Pass Clube")o.clubeFix+=tx.m;
       if(["C6 Bank Atomos","IUPP Itaú","LATAM Travel"].includes(tx.s)&&tx.t==="B")o.bonusTransf+=tx.m;
-      if(!["Itaú LATAM Infinite","LATAM Pass Clube"].includes(tx.s)&&tx.t==="A")o.extBase+=tx.m;
+      if(!["Itaú LATAM Platinum","LATAM Pass Clube"].includes(tx.s)&&tx.t==="A")o.extBase+=tx.m;
     });
     const arr=Object.values(m).sort((a,b)=>a.key.localeCompare(b.key));
     let cumTot=0,cumExt=0,cumCost=0;
     return arr.map((o,idx)=>{
       cumTot+=o.total;
       const usd=UM[o.key]||5.70;
-      const spUSD=o.itauBase/2.5;
+      const platinumBase=o.itauBase;
+      const spUSD=platinumBase/2.0;
       const spBRL=spUSD*usd;
-      const baseline=o.itauBase;
+      const baseline=platinumBase;
       const extras=o.clubeFix+o.itauBonus+o.bonusTransf;
       cumExt+=extras;
-      const ad=spBRL>=20000?1:spBRL>=10000?0.5:0;
-      const anPaga=100*(1-ad);
-      const cost=406.70+anPaga;
+      const ad=spBRL>=4000?1:spBRL>=2000?0.5:0;
+      const anPaga=62*(1-ad);
+      const cost=356.80+anPaga;
       cumCost+=cost;
-      const isCar=idx===0&&o.itauBase===0;
-      const cpct=o.itauBase>0?Math.round((o.itauBonus/o.itauBase)*100):0;
+      const isCar=idx===0&&platinumBase===0;
+      const cpct=platinumBase>0?Math.round((o.itauBonus/platinumBase)*100):0;
       const cpmExtra=isCar?null:(extras>0?cost/extras:null);
       return{...o,cumTot,cumExt,cumCost,spBRL:Math.round(spBRL),spUSD:Math.round(spUSD),usd,
         baseline,extras,adPct:Math.round(ad*100),anPaga:Math.round(anPaga),cost:Math.round(cost),
@@ -133,7 +172,15 @@ function App(){
       const clubMi=club.mi;
       const tot=cardMi+clubMi;
       let anPaga=card.a;
-      if(card.id==="inf"){
+      if(card.id==="plt"){
+        if(spBRL>=card.i1)anPaga=0;
+        else if(spBRL>=card.i5)anPaga=card.a*0.5;
+      }
+      if(card.id==="inf"||card.id==="blk"){
+        if(spBRL>=card.i1)anPaga=0;
+        else if(spBRL>=card.i5)anPaga=card.a*0.5;
+      }
+      if(card.id==="gld"){
         if(spBRL>=card.i1)anPaga=0;
         else if(spBRL>=card.i5)anPaga=card.a*0.5;
       }
@@ -146,7 +193,7 @@ function App(){
         club:club.n,clid:club.id,rate,cardMi,clubMi,tot,
         anPaga:Math.round(anPaga),clubP:club.p,cost:Math.round(cost*100)/100,
         extraMi,extraCost:Math.round(extraCost*100)/100,roiInc:Math.round(roiInc),cpmInc,
-        pq:club.pq,isCur:card.id==="inf"&&club.id==="bte",isBase:card.id==="c6c"&&club.id==="0"};
+        pq:club.pq,isCur:card.id==="plt"&&club.id==="bt",isBase:card.id==="c6c"&&club.id==="0"};
     };
     const r=[];CARDS.forEach(c=>CLUBS.forEach(cl=>r.push(sim(c,cl))));
     return r.sort((a,b)=>{
@@ -173,10 +220,10 @@ function App(){
         <div style={{fontSize:10,color:Z.ac,textTransform:"uppercase",letterSpacing:3,fontWeight:700}}>LATAM Pass Dashboard</div>
         <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.8,marginTop:2}}>Milhas & ROI</div>
         <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
-          <span style={{fontSize:9,background:"rgba(249,115,22,0.15)",color:"#f97316",padding:"3px 8px",borderRadius:6,fontWeight:700}}>Visa Infinite Personnalité</span>
-          <span style={{fontSize:9,background:"rgba(16,185,129,0.15)",color:"#10b981",padding:"3px 8px",borderRadius:6,fontWeight:700}}>Clube Base+Turbo+Embarque</span>
+          <span style={{fontSize:9,background:"rgba(249,115,22,0.15)",color:"#f97316",padding:"3px 8px",borderRadius:6,fontWeight:700}}>LATAM Platinum</span>
+          <span style={{fontSize:9,background:"rgba(16,185,129,0.15)",color:"#10b981",padding:"3px 8px",borderRadius:6,fontWeight:700}}>Clube Base+Turbo</span>
         </div>
-        <div style={{fontSize:11,color:Z.dm,marginTop:6}}>Jul/25 – Mar/26 · Saldo: {fm(BAL)}</div>
+        <div style={{fontSize:11,color:Z.dm,marginTop:6}}>Set/25 – Mar/26 · Saldo: {fm(BAL)}</div>
       </div>
 
       <div style={{background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -202,12 +249,12 @@ function App(){
           <ResponsiveContainer width="100%" height={210}>
             <AreaChart data={md} margin={{top:5,right:16,left:0,bottom:0}}>
               <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={Z.ac} stopOpacity={0.4}/><stop offset="100%" stopColor={Z.ac} stopOpacity={0}/></linearGradient></defs>
-              <ReferenceArea x1="Jul/25" x2="Jan/26" fill="rgba(16,185,129,0.06)"/>
+              <ReferenceArea x1="Set/25" x2="Jan/26" fill="rgba(16,185,129,0.06)"/>
               <ReferenceArea x1="Fev/26" x2="Mar/26" fill="rgba(245,158,11,0.06)"/>
               <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
               <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
               <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} tickFormatter={v=>`${Math.round(v/1000)}k`} width={36}/>
-              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const d=md.find(m=>m.label===label);return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}: {fm(payload[0]?.value)}</div>{d&&<div style={{fontSize:10,color:Z.dm}}>Extras: {fm(d.extras)} · Base: {fm(d.baseline)}</div>}{d?.isCar&&<div style={{fontSize:10,color:Z.ac}}>Carência</div>}{d?.cpct>0&&<div style={{fontSize:10,color:d.cpct>=70?Z.gn:Z.bn}}>Bônus Itaú*: +{d.cpct}%</div>}</div>);}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const d=md.find(m=>m.label===label);return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}: {fm(payload[0]?.value)}</div>{d&&<div style={{fontSize:10,color:Z.dm}}>Extras: {fm(d.extras)} · Base: {fm(d.baseline)}</div>}{d?.isCar&&<div style={{fontSize:10,color:Z.ac}}>Carência</div>}{d?.cpct>0&&<div style={{fontSize:10,color:d.cpct>=70?Z.gn:Z.bn}}>Bônus Itaú*: +{d.cpct}%</div>}</div>);}}/> 
               <Area type="monotone" dataKey="cumTot" name="Acumulado" stroke={Z.ac} strokeWidth={2.5} fill="url(#g1)" dot={{r:3,fill:Z.ac,strokeWidth:0}}/>
             </AreaChart>
           </ResponsiveContainer>
@@ -257,7 +304,7 @@ function App(){
               <CartesianGrid strokeDasharray="3 3" stroke={Z.gr} vertical={false}/>
               <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
               <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} tickFormatter={v=>`${Math.round(v/1000)}k`} width={36}/>
-              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:6}}>{label}</div>{payload.map((p,i)=>(<div key={i} style={{color:p.stroke,fontSize:11}}>{p.name}: <strong>{fR(Math.round(p.value))}</strong></div>))}</div>);}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:6}}>{label}</div>{payload.map((p,i)=>(<div key={i} style={{color:p.stroke,fontSize:11}}>{p.name}: <strong>{fR(Math.round(p.value))}</strong></div>))}</div>);}}/> 
               <Area type="monotone" dataKey={d=>d.rCumExt*MKT} name="Valor Extras" stroke={Z.gn} fill="rgba(16,185,129,0.1)" strokeWidth={2}/>
               <Line type="monotone" dataKey="rCumCo" name="Custo" stroke={Z.rd} strokeWidth={2.5} dot={{r:3,fill:Z.rd,strokeWidth:0}}/>
             </ComposedChart>
@@ -270,7 +317,7 @@ function App(){
               <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
               <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} width={36} domain={[0,'auto']}/>
               <ReferenceLine y={MKT} stroke={Z.bn} strokeDasharray="6 3" strokeWidth={1.5} label={{value:"R$0,025",position:"right",fill:Z.bn,fontSize:9}}/>
-              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0].value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi extra: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"Abaixo do mercado":"Acima do mercado"}</div></div>);}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0].value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi extra: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"Abaixo do mercado":"Acima do mercado"}</div></div>);}}/> 
               <Bar dataKey="cpmExtra" radius={[4,4,0,0]}>{roiData.map((m,i)=>(<Cell key={i} fill={cCol(m.cpmExtra)}/>))}</Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -288,7 +335,7 @@ function App(){
               <XAxis dataKey="label" tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false}/>
               <YAxis tick={{fontSize:9,fill:Z.dm}} axisLine={false} tickLine={false} width={36} domain={[0,0.032]}/>
               <ReferenceLine y={MKT} stroke={Z.bn} strokeDasharray="6 3" strokeWidth={1.5} label={{value:"R$0,025",position:"right",fill:Z.bn,fontSize:9}}/>
-              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0]?.value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi acumulado: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"ROI positivo no acumulado":"ROI negativo no acumulado"}</div></div>);}}/>
+              <Tooltip content={({active,payload,label})=>{if(!active||!payload?.length)return null;const v=payload[0]?.value;return(<div style={{background:Z.ca,border:`1px solid ${Z.bd}`,borderRadius:10,padding:"10px 14px"}}><div style={{color:Z.tx,fontWeight:700,fontSize:12,marginBottom:4}}>{label}</div><div style={{fontSize:11,color:Z.mu}}>R$/mi acumulado: <strong style={{color:cCol(v)}}>R$ {v?.toFixed(4)}</strong></div><div style={{fontSize:10,color:v<MKT?Z.gn:Z.rd,marginTop:2}}>{v<MKT?"ROI positivo no acumulado":"ROI negativo no acumulado"}</div></div>);}}/> 
               <Area type="monotone" dataKey={d=>d.rCumCo/d.rCumExt} name="R$/mi acumulado" stroke={Z.ac} fill="rgba(99,102,241,0.1)" strokeWidth={2.5} dot={{r:3,fill:Z.ac,strokeWidth:0}}/>
             </ComposedChart>
           </ResponsiveContainer>
@@ -369,9 +416,11 @@ function App(){
 
         <div style={{background:Z.cd,border:`1px solid ${Z.bd}`,borderRadius:12,padding:14,marginTop:14,fontSize:10,color:Z.dm,lineHeight:1.6}}>
           <div style={{fontWeight:700,color:Z.tx,marginBottom:6,fontSize:11}}>Premissas</div>
-          <p style={{margin:"0 0 4px"}}>• Baseline: <strong>C6 Carbon sem clube</strong> (2,5pts/USD, R$0)</p>
-          <p style={{margin:"0 0 4px"}}>• LATAM Infinite c/ clube: 3,75 mi/USD (2,5 + 50%*)</p>
+          <p style={{margin:"0 0 4px"}}>• Baseline: <strong>C6 Carbon sem clube</strong> (2,5pts/USD, R$0 — cartão isento)</p>
+          <p style={{margin:"0 0 4px"}}>• LATAM Platinum c/ clube Base+Turbo: 3,0 mi/USD (2,0 + 50%*)</p>
+          <p style={{margin:"0 0 4px"}}>• LATAM Infinite/Black c/ clube: 3,75 mi/USD (2,5 + 50%*)</p>
           <p style={{margin:"0 0 4px"}}>• C6 Carbon c/ clube: 3,375 pts/USD (2,5 + 35% transf.)</p>
+          <p style={{margin:"0 0 4px"}}>• BRB DUX c/ clube: 6,75 pts/USD (5,0 + 35% transf.)</p>
           <p style={{margin:"0 0 4px"}}>• The One c/ clube: 4,05 pts/USD (3,0 + 35% transf.)</p>
           <p style={{margin:"0 0 4px"}}>• Ref: R$0,025/milha (cotação mercado, Balcão de Milhas)</p>
           <p style={{margin:0}}>• * Campanha recorrente, sujeita a renovação</p>
