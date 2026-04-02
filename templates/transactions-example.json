@@ -1,9 +1,11 @@
 [
   { "d": "2025-07", "s": "LATAM Airlines", "t": "A", "m": 590, "nota": "Voo doméstico" },
   { "d": "2025-08", "s": "C6 Bank Atomos", "t": "A", "m": 107600, "nota": "Transferência de Átomos" },
-  { "d": "2025-08", "s": "C6 Bank Atomos", "t": "B", "m": 25239, "nota": "Bônus transferência (clube 35%)" },
-  { "d": "2025-08", "s": "LATAM Pass Clube", "t": "A", "m": 11500, "nota": "Milhas fixas mensais" },
+  { "d": "2025-08", "s": "C6 Bank Atomos", "t": "B", "m": 25239, "nota": "Bônus transferência (clube 35% c/ Itaú)" },
+  { "d": "2025-08", "s": "LATAM Pass Clube", "t": "A", "m": 11500, "nota": "Milhas fixas mensais (c/ Itaú)" },
   { "d": "2025-09", "s": "Itaú LATAM Infinite", "t": "A", "m": 3955, "nota": "Acúmulo base 2.5 mi/USD" },
   { "d": "2025-09", "s": "Itaú LATAM Infinite", "t": "B", "m": 2769, "nota": "Bônus campanha 70%*" },
-  { "d": "2025-09", "s": "LATAM Pass Clube", "t": "A", "m": 11500, "nota": "Milhas fixas mensais" }
+  { "d": "2025-09", "s": "LATAM Pass Clube", "t": "A", "m": 11500, "nota": "Milhas fixas mensais (c/ Itaú)" },
+  { "d": "2025-10", "s": "Nubank Ultravioleta", "t": "A", "m": 5000, "nota": "Transferência manual" },
+  { "d": "2025-10", "s": "Nubank Ultravioleta", "t": "B", "m": 500, "nota": "Bônus Modo LATAM 10%" }
 ]

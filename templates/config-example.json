@@ -5,7 +5,9 @@
     "nome": "LATAM Pass Itaú Visa Infinite",
     "taxa_nac": 2.5,
     "taxa_int": 3.5,
-    "anuidade_mensal": 100,
+    "anuidade_mensal": 105,
+    "anuidade_paga": true,
+    "isencao": null,
     "isencao_100_pct": 20000,
     "isencao_50_pct": 10000,
     "tipo": "direct",
@@ -16,18 +18,38 @@
       "id": "c6c",
       "nome": "C6 Carbon",
       "taxa_nac": 2.5,
-      "anuidade_mensal": 0,
+      "anuidade_mensal": 98,
+      "anuidade_paga": false,
+      "isencao": "investimento",
+      "isencao_detalhe": ">R$50k investidos em CDB C6",
       "tipo": "transfer",
       "programa": "Átomos→LATAM"
+    },
+    {
+      "id": "nuv",
+      "nome": "Nubank Ultravioleta",
+      "taxa_nac": 2.2,
+      "anuidade_mensal": 89,
+      "anuidade_paga": false,
+      "isencao": "promocao_temporal",
+      "isencao_detalhe": "12 meses grátis (até MM/YYYY)",
+      "modo_latam_pass": true,
+      "bonus_modo_latam": 0.10,
+      "taxa_efetiva_com_modo": 2.42,
+      "tipo": "transfer",
+      "programa": "Pontos Nubank→LATAM"
     }
   ],
   "clube": {
     "id": "bte",
     "nome": "Base+Turbo+Embarque",
     "preco_mensal": 406.70,
-    "milhas_fixas": 11500,
-    "pq_mensal": 750,
-    "bonus_transferencia": 0.35
+    "milhas_fixas_com_itau": 11500,
+    "milhas_fixas_sem_itau": 10000,
+    "pq_mensal_com_itau": 750,
+    "pq_mensal_sem_itau": 500,
+    "bonus_transferencia_com_itau": 0.35,
+    "bonus_transferencia_sem_itau": 0.30
   },
   "categoria_elite": "Platinum",
   "campanha_ativa": {
@@ -38,6 +60,11 @@
   },
   "mkt_ref": 0.025,
   "mkt_fonte": "Balcão de Milhas",
+  "mkt_alternativo": {
+    "venda_mercado": 0.025,
+    "resgate_economico": 0.040,
+    "resgate_executiva": 0.080
+  },
   "cambio_ptax": {
     "2025-07": 5.47,
     "2025-08": 5.51,
